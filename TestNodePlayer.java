@@ -102,25 +102,21 @@ public class TestNodePlayer extends BasePlayer{
 	    int i=0;
 	    i++;
 	    if(this.children == null){
-		
 		return null;
 	    }
 	    if(root.state.equals(s)){
-		sameTest=this;
 		return this;
 	    }
 	    for(String key:this.children.keySet()){
 		Node nxt=this.children.get(key);
 		if(key.equals(s)){
-		    sameTest=this;
 		    return nxt;
 		}
 		else{
-		    return nxt.nodeSearch(s);
+		     nxt.nodeSearch(s);
 		}
 	    }
 		    
-	    
 	    return null;
 	}
 	
@@ -285,7 +281,9 @@ public class TestNodePlayer extends BasePlayer{
 	    if(this.children == null){
 		return;
 	    }
-	    for(String key:this.children.keySet()){
+	    int i=0;
+	    for(String key:this.children.keySet()){		
+		System.out.println("times of i ==== "+i++);
 		Node nxt=this.children.get(key);
 		System.out.println(nxt.state);
 		//nxt.printItem(nxt.list);
@@ -296,7 +294,7 @@ public class TestNodePlayer extends BasePlayer{
 
     public Node root;
     //    public Node parent;
-    public Node sameTest;
+    public List<Node>  sameTest=new ArrayList<Node>();
 
     boolean escapedOwnFlag; 
     boolean escapedOppositeFlag;
@@ -327,7 +325,8 @@ public class TestNodePlayer extends BasePlayer{
 	    Node n = v.nodeSearch(s);
 
 	    if(n != null){
-		sameTest=n;
+		System.out.println("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
+		sameTest.add(n);
 		return n;
 	    }else{
 		p.expand(s);
@@ -375,15 +374,18 @@ public class TestNodePlayer extends BasePlayer{
     }
 
     public void printTest(){
-	Node v = sameTest;
+	Node v = null;
 	Node nxt2=null;
 	System.out.println("same test");
-	for(String key:v.children.keySet()){
-	    Node nxt=v.children.get(key);
-	    System.out.println(nxt.state);
-	    nxt2=nxt;
-	}	    
-	 
+	for(int i=0;i<sameTest.size();i++){
+	    v=sameTest.get(i);
+	    System.out.println("parent state:"+v.state);
+	    for(String key:v.children.keySet()){
+		Node nxt=v.children.get(key);
+		System.out.println("          child state:"+nxt.state);
+		nxt2=nxt;
+	    }	    
+	}
 	System.out.println("print test of list");
 	v.printItem();
 
@@ -395,7 +397,17 @@ public class TestNodePlayer extends BasePlayer{
 	getNextHand(nxt2.state,nxt2);
 	System.out.println("after :"+nxt2.moveItem(0,3));
 
-		
+	for(int i=0;i<sameTest.size();i++){
+	    v=sameTest.get(i);
+	    System.out.println("parent state:"+v.state);
+	    for(String key:v.children.keySet()){
+		Node nxt=v.children.get(key);
+		System.out.println("          child state:"+nxt.state);
+		nxt2=nxt;
+	    }	    
+	}
+
+	
     }
     
     public void getNextHand(String curentState,Node parent){
@@ -403,58 +415,70 @@ public class TestNodePlayer extends BasePlayer{
 	String key = null;
 	int num,dir;
 	Node opposite = null;
-
-	initJudge();
+	Node save;
 	
 	if(root == null)
 	    root=addNode(curentState,null);
 
 	//node v is root of this method
+	System.out.println("masakane masakane");
 	Node v =root.nodeSearch(curentState);
-
-       
 	//curentStaten have not set on node
 	//* parent is un
 	if(v == null){
+	    System.out.println("masakane HIT");
 	    v=addNode(curentState,parent);
 	}
+
+	save=v;
 	for( int i=0;i<100;i++){
-	    //my turn
-	    System.out.println("MY TURN");
-	    System.out.println("before:"+v.state);
-	    while(key==null){
-		num = rand.nextInt(8);
-		dir = rand.nextInt(4);
-		System.out.println("erabaretano ha (dir,num) = ("+dir+","+num+")");
-		key = v.moveItem(dir,num);
-	    }
-	    System.out.println("after :"+key);
-	    opposite = new Node(key);
-	    key=null;
+	    initJudge();
+	    boolean flag=true;
+	    v=save;
+	    System.out.println("GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START");
+		while(flag){
+	    //	    for(int j=0;j<3;j++){
+		//my turn
+		System.out.println("MY TURN");
+		System.out.println("before:"+v.state);
+		while(key==null){
+		    num = rand.nextInt(8);
+		    dir = rand.nextInt(4);		    
+		    //    num=3;
+		    //dir=0;
+		    System.out.println("erabaretano ha (dir,num) = ("+dir+","+num+")");
+		    key = v.moveItem(dir,num);
+		}
+		System.out.println("after :"+key);
+		opposite = new Node(key);
+		key=null;
 
-	    if(winJudge(opposite)){
-		System.out.println("how many times of i:"+i);
-		break;
-	    }
+		if(winJudge(opposite)){
+		    System.out.println("how many times of i:"+i);
+		    flag=false;
+		}
 	    
-	    //your turn
-	    System.out.println("YOUR TURN");
-	    System.out.println("before:"+key);
-	    while(key==null){
-		num = rand.nextInt(8)+8;
-		dir = rand.nextInt(4);
-		System.out.println("erabaretano ha (dir,num) = ("+dir+","+num+")");
-		key = opposite.moveItem(dir,num);
-	    }
-	    System.out.println("after :"+key);
-	    v = addNode(key,v);
-	    key=null;
+		//your turn
+		System.out.println("YOUR TURN");
+		System.out.println("before:"+key);
+		while(key==null){
+		    num = rand.nextInt(8)+8;
+		    dir = rand.nextInt(4);
+		    //num=9;
+		    //dir=1;
+		    System.out.println("erabaretano ha (dir,num) = ("+dir+","+num+")");
+		    key = opposite.moveItem(dir,num);
+		}
+		System.out.println("after :"+key);
+		v = addNode(key,v);
+		key=null;
 
-	    if(winJudge(v)){
-		System.out.println("how many times of i:"+i);
-		break;
+		if(winJudge(v)){
+		    System.out.println("how many times of i:"+i);
+		    flag=false;
+		}	      
 	    }
-
+	    System.out.println("GAME SET----GAME SET----GAME SET----GAME SET----GAME SET----GAME SET");
 	}
 	
 
@@ -504,8 +528,9 @@ public class TestNodePlayer extends BasePlayer{
 	    p.printBoard();
 	}
 
-	p.root.printAllInformation();
+       	p.root.printAllInformation();
 	p.printTest();
+	//		p.root.printAllInformation();
 	if(p.isWinner()){
 	    System.out.println("won");
 	}else{
