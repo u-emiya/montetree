@@ -76,6 +76,7 @@ public class TestNodePlayer extends BasePlayer{
 	int w; //times of winner
 	int n; //times of visited
 	String state;//Board information
+	double uctValue;
 
 	List<mctsItem> list=new ArrayList<mctsItem>();
 	
@@ -84,9 +85,11 @@ public class TestNodePlayer extends BasePlayer{
 	Node(String state){
 	    this.state=state;
 	    this.w=0;
-	    this.n=1;
+	    this.n=0;
+	    this.uctValue=0;
 	    list=setItem(this.state);
 	    this.children= new HashMap<String ,TestNodePlayer.Node>();
+	    
 	}
 	
 	//this method is expand.it trust that method is used by  parent node
@@ -102,22 +105,32 @@ public class TestNodePlayer extends BasePlayer{
 	    int i=0;
 	    i++;
 	    if(this.children == null){
+		//		System.out.println("1");
 		return null;
 	    }
 	    if(root.state.equals(s)){
+		//System.out.println("2");
 		return this;
 	    }
+	    Node  v=null;
 	    for(String key:this.children.keySet()){
 		Node nxt=this.children.get(key);
 		if(key.equals(s)){
+		    //  System.out.println("3");
 		    return nxt;
 		}
 		else{
-		     nxt.nodeSearch(s);
+		     v=nxt.nodeSearch(s);
 		}
 	    }
-		    
-	    return null;
+
+	    if(v!=null){
+		//		System.out.println("4");
+		return v;
+	    }else{
+		//System.out.println("5");		
+		return null;
+	    }
 	}
 	
 	public List<mctsItem>  setItem(String key){
@@ -286,6 +299,7 @@ public class TestNodePlayer extends BasePlayer{
 		System.out.println("times of i ==== "+i++);
 		Node nxt=this.children.get(key);
 		System.out.println(nxt.state);
+		System.out.println("n---"+nxt.n+",w---"+nxt.w);
 		//nxt.printItem(nxt.list);
 		nxt.printAllInformation();
 	    }
@@ -298,13 +312,13 @@ public class TestNodePlayer extends BasePlayer{
 
     boolean escapedOwnFlag; 
     boolean escapedOppositeFlag;
-    boolean winOwn;
-    boolean winOpposite;
+    boolean winOwn=false;
+    boolean winOpposite=false;
     public void initJudge(){
 	this.escapedOwnFlag=false; 
 	this.escapedOppositeFlag=false;
-	this.winOwn=false;
-	this.winOpposite=false;
+	//	this.winOwn=false;
+	//this.winOpposite=false;
     }
 
         
@@ -323,13 +337,17 @@ public class TestNodePlayer extends BasePlayer{
 	}
 	else {
 	    Node n = v.nodeSearch(s);
-
 	    if(n != null){
 		System.out.println("HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH");
-		sameTest.add(n);
+		//		n.n++;	   
+		if(!sameTest.contains(n)){
+		    sameTest.add(n);
+		}
 		return n;
 	    }else{
+		System.out.println("expand suruzo!!");
 		p.expand(s);
+		//		p.children.get(s).n++;
 		return p.children.get(s);
 		
 	    }
@@ -339,9 +357,11 @@ public class TestNodePlayer extends BasePlayer{
     public boolean winJudge(Node n){
 	int rcnt=0,bcnt=0,ucnt=0;
 	if(escapedOwnFlag){
+	    System.out.println("YOU WIN!!");
 	    winOwn=true;
 	    return true;
 	}else if(escapedOppositeFlag){
+	    System.out.println("YOU LOSE!!");
 	    winOpposite=true;
 	    return true;
 	}
@@ -357,14 +377,17 @@ public class TestNodePlayer extends BasePlayer{
 	}
 	if(rcnt==0){
 	    System.out.println("HIT!! red");
+	    System.out.println("YOU WIN!!");
 	    winOwn=true;
 	    return true;
 	}else if(bcnt==0){
 	    System.out.println("HIT!! blue");
+	    System.out.println("YOU LOSE!!");
 	    winOpposite=true;
 	    return true;
 	}else if(ucnt<5){
 	    System.out.println("HIT!! u-ray");
+	    System.out.println("YOU LOSE!!");
 	    winOpposite=true;
 	    return true;
 	}
@@ -392,12 +415,11 @@ public class TestNodePlayer extends BasePlayer{
 	System.out.println("print test of decode");
 	System.out.println(v.decodeItem());
 
-	System.out.println("print test of moveItem::node--2nd nxt");
-	System.out.println("before:"+nxt2.state);
+	System.out.println("print test of getNextHand::node--2nd nxt");
 	getNextHand(nxt2.state,nxt2);
-	System.out.println("after :"+nxt2.moveItem(0,3));
 
 	for(int i=0;i<sameTest.size();i++){
+	    System.out.println("parent child i:"+i);
 	    v=sameTest.get(i);
 	    System.out.println("parent state:"+v.state);
 	    for(String key:v.children.keySet()){
@@ -416,6 +438,8 @@ public class TestNodePlayer extends BasePlayer{
 	int num,dir;
 	Node opposite = null;
 	Node save;
+
+	Stack<Node> stack = new Stack<Node>();
 	
 	if(root == null)
 	    root=addNode(curentState,null);
@@ -436,16 +460,21 @@ public class TestNodePlayer extends BasePlayer{
 	    boolean flag=true;
 	    v=save;
 	    System.out.println("GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START");
-		while(flag){
-	    //	    for(int j=0;j<3;j++){
+	    System.out.println(i+"kaime");
+	    int cherry=1;
+	    while(flag){
+		//	    for(int j=0;j<3;j++){
 		//my turn
 		System.out.println("MY TURN");
 		System.out.println("before:"+v.state);
 		while(key==null){
-		    num = rand.nextInt(8);
-		    dir = rand.nextInt(4);		    
-		    //    num=3;
-		    //dir=0;
+		    if(cherry==0){
+			num=3;
+			dir=0;
+		    }else{
+			num = rand.nextInt(8);
+			dir = rand.nextInt(4);		    
+		    }
 		    System.out.println("erabaretano ha (dir,num) = ("+dir+","+num+")");
 		    key = v.moveItem(dir,num);
 		}
@@ -462,15 +491,24 @@ public class TestNodePlayer extends BasePlayer{
 		System.out.println("YOUR TURN");
 		System.out.println("before:"+key);
 		while(key==null){
-		    num = rand.nextInt(8)+8;
-		    dir = rand.nextInt(4);
-		    //num=9;
-		    //dir=1;
+		    if(cherry==0){
+			num=9;
+			dir=1;
+			System.out.println("cherry time");
+		    }else{
+			num = rand.nextInt(8)+8;
+			dir = rand.nextInt(4);
+		    }
 		    System.out.println("erabaretano ha (dir,num) = ("+dir+","+num+")");
 		    key = opposite.moveItem(dir,num);
 		}
 		System.out.println("after :"+key);
 		v = addNode(key,v);
+		if(cherry==0){
+		    System.out.println("test of cherry"+v.state);
+		}
+		cherry++;				    
+		stack.add(v);
 		key=null;
 
 		if(winJudge(v)){
@@ -478,11 +516,77 @@ public class TestNodePlayer extends BasePlayer{
 		    flag=false;
 		}	      
 	    }
+	    while(!stack.empty()){
+		Node reward = stack.pop();
+		if(winOwn){
+		    System.out.println("win reward");
+		    System.out.println("n:"+reward.n);
+		    reward.n++;
+		    reward.w++;
+		}else if(winOpposite){
+		    System.out.println("lose reward");
+		    reward.n++;
+		    reward.w--;
+		}else{
+		    System.out.println("NO HIT");
+		}
+	    }
+	    winOwn= false;
+	    winOpposite=false;
+
 	    System.out.println("GAME SET----GAME SET----GAME SET----GAME SET----GAME SET----GAME SET");
 	}
-	
 
+	
+	
+	Node test=root.nodeSearch(curentState);	
+	System.out.println("reward test");
+	System.out.println("parent:"+parent.state);
+	int banana=0;
+	for(String apple:test.children.keySet()){
+	    Node printReward=test.children.get(apple);
+	    System.out.println(printReward.state);	    
+	    System.out.println("n:"+printReward.n+",w:"+printReward.w);
+	    banana=banana+printReward.n;
+	}
+	System.out.println("how many times of banana:"+banana);
+
+	System.out.println("test of uct method");
+	double maxUctValue=uct(test);
+	System.out.println(maxUctValue);
     }
+    
+    public double uct(Node n){
+	double total=0.0;
+	double save=0.0;
+	for(String key:n.children.keySet()){
+	    Node kari=n.children.get(key);
+	    total=total+kari.n;
+	}
+	double epsiron=1E-5;
+	double c=Math.sqrt(2);
+
+	for(String key:n.children.keySet()){
+	    Node v=n.children.get(key);
+	    if(v.n==0){
+		continue;
+	    }
+	    double winRate=(double)v.w/((double)v.n+epsiron);
+	    double searchValue=c*Math.sqrt(Math.log(total)/((double)v.n+epsiron));
+	    System.out.println(v.state);	    	    
+	    v.uctValue=winRate+searchValue;					   
+	    System.out.println("uctValue:"+v.uctValue+"------winRate:"+winRate+",searchValue:"+searchValue);
+	    System.out.println();
+
+	    if(save<=v.uctValue){
+		save=v.uctValue;
+	    }
+	}
+
+	return save;
+	
+    }
+
     
     public static void main(String[] args) throws Exception{
 	TestNodePlayer p = new TestNodePlayer();
@@ -530,7 +634,7 @@ public class TestNodePlayer extends BasePlayer{
 
        	p.root.printAllInformation();
 	p.printTest();
-	//		p.root.printAllInformation();
+	p.root.printAllInformation();
 	if(p.isWinner()){
 	    System.out.println("won");
 	}else{
@@ -539,3 +643,4 @@ public class TestNodePlayer extends BasePlayer{
     }
 
 }
+
