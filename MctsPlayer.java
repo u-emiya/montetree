@@ -77,7 +77,7 @@ public class MctsPlayer extends BasePlayer{
 	int n; //times of visited
 	String state;//Board information
 	double uctValue;
-
+	
 	List<mctsItem> list=new ArrayList<mctsItem>();
 	
 	Map<String ,Node>children;
@@ -88,10 +88,9 @@ public class MctsPlayer extends BasePlayer{
 	    this.n=0;
 	    this.uctValue=0;
 	    list=setItem(this.state);
-	    this.children= new HashMap<String ,MctsPlayer.Node>();
-	    
+	    this.children= new HashMap<String ,MctsPlayer.Node>();	   
 	}
-	
+
 	//this method is expand.it trust that method is used by  parent node
 	public void expand(String s){
 	    this.children.put(s,new Node(s));	
@@ -156,15 +155,16 @@ public class MctsPlayer extends BasePlayer{
 	
 	public String moveItem(int dir,int no){
 	    Node v = new Node(this.state); 
-	    mctsItem item = v.list.get(no);
-	    int x=item.getX(),y=item.getY();
+	    mctsItem itemDummy = v.list.get(no);
+	    int x=itemDummy.getX(),y=itemDummy.getY();
 	    int moveNo;
-	    if(escaped(dir,no,item)){
-		System.out.println("escaped item");
+	    String exColor;
+	    if(v.escaped(dir,no,itemDummy)){
+		//	System.out.println("escaped item");
 		return v.decodeItem();
 	    }
-	    if(!item.isMove(dir)){
-		System.out.println("this moveing is unalbe");
+	    if(!itemDummy.isMove(dir)){
+		//		System.out.println("this moveing is unalbe");
 		return null;
 	    }else{
 		if(dir == 0 ){
@@ -176,23 +176,23 @@ public class MctsPlayer extends BasePlayer{
 		}else if(dir == 3){
 		    x=x-1;
 		}
-		moveNo=isPosition(x,y);
+		moveNo=this.isPosition(x,y);
 		if(moveNo == -1){
-		    item.setX(x);
-		    item.setY(y);
+		    itemDummy.setX(x);
+		    itemDummy.setY(y);
 		    return v.decodeItem();
 		}else{
 		    if(0<=no && no<=7){		    
 			if(0<=moveNo && moveNo<=7){
 			    return null;
 			}else {
-			    item.setX(x);
-			    item.setY(y);
-
-			    item= v.list.get(moveNo);
-			    item.setX(9);
-			    item.setY(9);
-			    item.setColor("p");
+			    itemDummy.setX(x);
+			    itemDummy.setY(y);
+			    
+			    itemDummy= v.list.get(moveNo);
+			    itemDummy.setX(9);
+			    itemDummy.setY(9);
+			    itemDummy.setColor("p");
 					    
 			    return v.decodeItem();
 			}
@@ -200,13 +200,15 @@ public class MctsPlayer extends BasePlayer{
 			if(8<=moveNo && moveNo<=15){
 			    return null;
 			}else {
-			    item.setX(x);
-			    item.setY(y);
+			    itemDummy.setX(x);
+			    itemDummy.setY(y);
 
-			    item= v.list.get(moveNo);
-			    item.setX(9);
-			    item.setY(9);
-			    item.setColor("f");
+			    itemDummy= v.list.get(moveNo);
+			    itemDummy.setX(9);
+			    itemDummy.setY(9);
+			    exColor=itemDummy.getColor();
+			    exColor=exColor.toLowerCase();
+			    itemDummy.setColor(exColor);
 					    
 			    return v.decodeItem();
 			}
@@ -220,28 +222,27 @@ public class MctsPlayer extends BasePlayer{
 
 	public boolean escaped(int dir,int no,mctsItem item ){
 	    int x=item.getX(),y=item.getY();
+	    if(item.getColor()=="R"){
+		return false;
+	    }
 	    if(0<=no && no<=7){
 		if(dir==2 && x==5 && y==0){
 		    item.setX(8);
 		    item.setY(8);
-		    escapedOwnFlag = true;
 		    return true;
 		}else if(dir==3 && x==0 && y==0){
 		    item.setX(8);
 		    item.setY(8);
-		    escapedOwnFlag = true;
 		    return true;
 		}		       
 	    }else if(8<=no && no<=15){
 		if(dir==2 && x==5 && y==5){
 		    item.setX(8);
 		    item.setY(8);
-		    escapedOppositeFlag = true;
 		    return true;
 		}else if(dir==3 && x==0 && y==5){
 		    item.setX(8);
 		    item.setY(8);
-		    escapedOppositeFlag = true;
 		    return true;
 		}		       
 	    }
@@ -249,8 +250,8 @@ public class MctsPlayer extends BasePlayer{
 	}
 	
 	
-    
-    
+	
+	
 	public String decodeItem(){
 	    StringBuffer buf = new StringBuffer();
 	    String sx,sy,scolor;
@@ -300,17 +301,9 @@ public class MctsPlayer extends BasePlayer{
     //    public Node parent;
     public List<Node>  sameTest=new ArrayList<Node>();
 
-    boolean escapedOwnFlag; 
-    boolean escapedOppositeFlag;
     boolean winOwn=false;
     boolean winOpposite=false;
-    public void initJudge(){
-	this.escapedOwnFlag=false; 
-	this.escapedOppositeFlag=false;
-	//	this.winOwn=false;
-	//this.winOpposite=false;
-    }
-
+    
         
     public Node addNode(String s , Node p){
 	if(root==null){
@@ -341,16 +334,18 @@ public class MctsPlayer extends BasePlayer{
 
     public boolean winJudge(Node n){
 	int rcnt=0,bcnt=0,ucnt=0;
-	if(escapedOwnFlag){
-	    winOwn=true;
-	    return true;
-	}else if(escapedOppositeFlag){
-	    winOpposite=true;
-	    return true;
-	}
 
 	for(int i=0;i<n.list.size();i++){
-	    if("R".equals( n.list.get(i).getColor() )){
+	    if(n.list.get(i).getX()==8 && n.list.get(i).getY()==8){
+		if(0<=i && i<=7){
+		    winOwn=true;
+		    return true;
+		}else if(8<=i && i<=15){
+		    winOpposite=true;
+		    return true;
+		}		
+		
+	    }else if("R".equals( n.list.get(i).getColor() )){
 		rcnt++;
 	    }else if("B".equals( n.list.get(i).getColor() )){
 		bcnt++;
@@ -368,9 +363,9 @@ public class MctsPlayer extends BasePlayer{
 	    winOpposite=true;
 	    return true;
 	}
-
+	
 	return false;
-
+	
     }
 
     public void printTest(){
@@ -430,64 +425,48 @@ public class MctsPlayer extends BasePlayer{
 	}
 
 	save=v;
-	for( int i=0;i<100;i++){
-	    initJudge();
+	for( int i=0;i<50;i++){
 	    boolean flag=true;
 	    v=save;
-	    System.out.println("GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START");
-	    System.out.println(i+"kaime");
-	    int cherry=1;
+	    //System.out.println("GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START");
+	    //System.out.println(i+"kaime");
 	    while(flag){
-		//	    for(int j=0;j<3;j++){
 		//my turn
-		System.out.println("MY TURN");
-		System.out.println("before:"+v.state);
+		//System.out.println("MY TURN");
+		//System.out.println("before:"+v.state);
 		while(key==null){
-		    if(cherry==0){
-			num=3;
-			dir=0;
-		    }else{
-			num = rand.nextInt(8);
-			dir = rand.nextInt(4);		    
-		    }
-		    System.out.println("erabaretano ha (dir,num) = ("+dir+","+num+")");
+		    num = rand.nextInt(8);
+		    dir = rand.nextInt(4);		    
+		    
+		    //System.out.println("erabaretano ha (dir,num) = ("+dir+","+num+")");
 		    key = v.moveItem(dir,num);
 		}
-		System.out.println("after :"+key);
+		//System.out.println("after :"+key);
 		opposite = new Node(key);
 		key=null;
 
 		if(winJudge(opposite)){
-		    System.out.println("how many times of i:"+i);
+		    //System.out.println("how many times of i:"+i);
 		    flag=false;
 		}
 	    
 		//your turn
-		System.out.println("YOUR TURN");
-		System.out.println("before:"+key);
+		//System.out.println("YOUR TURN");
+		//System.out.println("before:"+key);
 		while(key==null){
-		    if(cherry==0){
-			num=9;
-			dir=1;
-			System.out.println("cherry time");
-		    }else{
-			num = rand.nextInt(8)+8;
-			dir = rand.nextInt(4);
-		    }
-		    System.out.println("erabaretano ha (dir,num) = ("+dir+","+num+")");
+		    num = rand.nextInt(8)+8;
+		    dir = rand.nextInt(4);
+		    
+		    //System.out.println("erabaretano ha (dir,num) = ("+dir+","+num+")");
 		    key = opposite.moveItem(dir,num);
 		}
-		System.out.println("after :"+key);
+		//System.out.println("after :"+key);
 		v = addNode(key,v);
-		if(cherry==0){
-		    System.out.println("test of cherry"+v.state);
-		}
-		cherry++;				    
 		stack.add(v);
 		key=null;
 
 		if(winJudge(v)){
-		    System.out.println("how many times of i:"+i);
+		    //System.out.println("how many times of i:"+i);
 		    flag=false;
 		}	      
 	    }
@@ -498,31 +477,44 @@ public class MctsPlayer extends BasePlayer{
 		    reward.w++;
 		}else if(winOpposite){
 		    reward.n++;
-		    reward.w--;
+		    //reward.w--;
 		}else{
-		    System.out.println("NO HIT");
+		    //System.out.println("NO HIT");
 		}
 	    }
 	    winOwn= false;
 	    winOpposite=false;
 
-	    System.out.println("GAME SET----GAME SET----GAME SET----GAME SET----GAME SET----GAME SET");
+	    //System.out.println("GAME SET----GAME SET----GAME SET----GAME SET----GAME SET----GAME SET");
 	}
 
 	
 	
-	Node test=root.nodeSearch(curentState);	
-	Node maxUctNode=uct(test);
-	int testBox[]=searchDirection(test,maxUctNode);
+	//	Node test=root.nodeSearch(curentState);	
+	Node maxUctNode=uct(save);
+	int testBox[]=searchDirection(save,maxUctNode);
 	return testBox;
     }
 
     public int[] searchDirection(Node parent,Node child){
 	int a[]= new int[2];
 	int dirX=0,dirY=0;
+	System.out.println("parent:"+parent.state);
+	System.out.println("child:"+child.state);
 	for(int i=0;i<8;i++){
-	    if(child.list.get(i).getX()==9 || child.list.get(i).getX()==8)
+	    if(child.list.get(i).getX()==9 )
 		continue;
+	    if(child.list.get(i).getX()==8){
+		if(parent.list.get(i).getX()==0 && parent.list.get(i).getY()==0 ){
+		    a[0]=i;
+		    a[1]=2;
+		}else if(parent.list.get(i).getX()==5 && parent.list.get(i).getY()==0){
+		    a[0]=i;
+		    a[1]=1;
+		}
+		  
+	    }
+		
 	    dirX=parent.list.get(i).getX()-child.list.get(i).getX();
 	    dirY=parent.list.get(i).getY()-child.list.get(i).getY();
 	    if(dirX==-1){
@@ -579,7 +571,7 @@ public class MctsPlayer extends BasePlayer{
         Random r = new Random(Calendar.getInstance().getTimeInMillis());
         Direction[] dirs = new Direction[] { Direction.NORTH, Direction.EAST, Direction.WEST, Direction.SOUTH };
 	int cnt = 0;
-
+       
 	String stringBoardInfo;
 	Node parent=null;
 	Node save=null;
@@ -604,20 +596,26 @@ public class MctsPlayer extends BasePlayer{
 		    p.move(own[i].getName(), dirs[d]);
                     p.printBoard();
                     break MY_TURN;
-                }
-            }
+                }else{
+		    System.out.println("false");
+		    System.out.println("i:"+i+"  d:"+d);
+		    System.out.println("position:x--"+own[i].getX()+"  y--"+own[i].getY());		   
+		}
+	    }
 	    System.out.println(cnt++);
 	    //	    parent=save;
-        }
-        if (p.isWinner()) {
-            System.out.println("won");
-        } else if (p.isLoser()) {
-            System.out.println("lost");
-        } else if (p.isDraw()) {
-	  System.out.println("draw");
-        }
+	}
+	if (p.isWinner()) {
+	    System.out.println("won");
+	} else if (p.isLoser()) {
+	    System.out.println("lost");
+	} else if (p.isDraw()) {
+	    System.out.println("draw");
+	}
 	
     }
 
 }
 
+    
+    
