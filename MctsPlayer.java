@@ -95,7 +95,17 @@ public class MctsPlayer extends BasePlayer{
 	public void expand(String s){
 	    this.children.put(s,new Node(s));	
 	}
-
+	
+	public boolean nearlyEquals(String s){
+	    String key=this.state;
+	    for(int i=0;i<key.length();i=i+3){
+		if(Integer.parseInt(key.substring(i,i+1)) != Integer.parseInt(s.substring(i,i+1)) || Integer.parseInt(key.substring(i+1,i+2)) != Integer.parseInt(s.substring(i+1,i+2)))
+		    return false;	 
+	    }
+	    return true;	    	    
+	    	    
+	}
+	    
 	
 	//this method returns the node which is key of parameter,
 	//if the node is not founded,this method returns null
@@ -105,13 +115,15 @@ public class MctsPlayer extends BasePlayer{
 	    if(this.children == null){
 		return null;
 	    }
-	    if(root.state.equals(s)){
-		return this;
-	    }
+	    	    if(root.state.equals(s)){
+	    //if(root.nearlyEquals(s)){
+		    return this;
+		}
 	    Node  v=null;
 	    for(String key:this.children.keySet()){
 		Node nxt=this.children.get(key);
-		if(key.equals(s)){
+			if(key.equals(s)){
+			    //if(nxt.nearlyEquals(s)){
 		    return nxt;
 		}
 		else{		    
@@ -222,7 +234,7 @@ public class MctsPlayer extends BasePlayer{
 
 	public boolean escaped(int dir,int no,mctsItem item ){
 	    int x=item.getX(),y=item.getY();
-	    if(item.getColor()=="R"){
+	    if(item.getColor().equals("R")){
 		return false;
 	    }
 	    if(0<=no && no<=7){
@@ -499,6 +511,7 @@ public class MctsPlayer extends BasePlayer{
     public int[] searchDirection(Node parent,Node child){
 	int a[]= new int[2];
 	int dirX=0,dirY=0;
+	a[0]=8;
 	System.out.println("parent:"+parent.state);
 	System.out.println("child:"+child.state);
 	for(int i=0;i<8;i++){
@@ -531,6 +544,43 @@ public class MctsPlayer extends BasePlayer{
 		a[1]=0;
 	    }
 	}
+
+	if(a[0]==8){
+	    System.out.println("black coffe");
+	    int saveOwn=0,saveOpposite=0;
+	    for(int i=0;i<8;i++){
+		if(parent.list.get(i).getX() != child.list.get(i).getX() && parent.list.get(i).getY() != child.list.get(i).getY())
+		    saveOwn=i;
+	    }
+	    for(int i=8;i<16;i++){
+		if(parent.list.get(i).getX() != child.list.get(i).getX() || parent.list.get(i).getY() != child.list.get(i).getY())
+		    if(child.list.get(i).getX()!=9){
+			System.out.println("bakeratta");
+			saveOpposite=i;
+		    }
+	    }
+	    dirX=parent.list.get(saveOwn).getX()-child.list.get(saveOpposite).getX();
+	    dirY=parent.list.get(saveOwn).getY()-child.list.get(saveOpposite).getY();
+	    System.out.println("dirX:"+dirX+",dirY:"+dirY);
+	    System.out.println("saveOwn:"+saveOwn);
+	    System.out.println("saveOpposite:"+saveOpposite);	    
+	    if(dirX==-1){
+		a[0]=saveOwn;
+		a[1]=1;
+	    }else if(dirX==1){
+		a[0]=saveOwn;
+		a[1]=2;
+	    }else if(dirY==-1){
+		a[0]=saveOwn;
+		a[1]=3;
+	    }else if(dirY==1){
+		a[0]=saveOwn;
+		a[1]=0;
+	    }
+
+	}
+
+	
 	return a;
     }
     
@@ -579,6 +629,17 @@ public class MctsPlayer extends BasePlayer{
 	    System.out.println("GAME_LOOP start");
             stringBoardInfo=p.waitBoardInfo();
 	    stringBoardInfo=stringBoardInfo.substring(5-1);
+
+	    System.out.println("tikan");
+	    System.out.println("before:"+stringBoardInfo);
+	    String ownItem=stringBoardInfo.substring(0,24);
+	    String oppositeItem=stringBoardInfo.substring(24);
+	    oppositeItem=oppositeItem.replace("r","p");
+	    oppositeItem=oppositeItem.replace("b","p");
+	    stringBoardInfo=ownItem.concat(oppositeItem);
+	    System.out.println("after:"+stringBoardInfo);
+
+	    
 	    parent=p.addNode(stringBoardInfo,parent);
 	    
             p.printBoard();
