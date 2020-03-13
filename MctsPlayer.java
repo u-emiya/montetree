@@ -775,6 +775,3 @@ public class MctsPlayer extends BasePlayer{
     }
 
 }
-
-    
-    
