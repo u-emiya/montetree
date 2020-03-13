@@ -77,6 +77,8 @@ public class MctsPlayer extends BasePlayer{
 	int n; //times of visited
 	String state;//Board information
 	double uctValue;
+	double winRateSave;
+	Node child;
 	
 	List<mctsItem> list=new ArrayList<mctsItem>();
 	
@@ -88,7 +90,8 @@ public class MctsPlayer extends BasePlayer{
 	    this.n=0;
 	    this.uctValue=0;
 	    list=setItem(this.state);
-	    this.children= new HashMap<String ,MctsPlayer.Node>();	   
+	    this.children= new HashMap<String ,MctsPlayer.Node>();
+	    this.child=null;
 	}
 
 	//this method is expand.it trust that method is used by  parent node
@@ -122,7 +125,15 @@ public class MctsPlayer extends BasePlayer{
 	    Node  v=null;
 	    for(String key:this.children.keySet()){
 		Node nxt=this.children.get(key);
-			if(key.equals(s)){
+		if(key.equals(s)){
+		    //		    System.out.println("HIT popotan");
+	    	    return nxt;
+		}
+	    }
+	    
+	    for(String key:this.children.keySet()){
+		Node nxt=this.children.get(key);
+		if(key.equals(s)){
 			    //if(nxt.nearlyEquals(s)){
 		    return nxt;
 		}
@@ -302,7 +313,7 @@ public class MctsPlayer extends BasePlayer{
 		System.out.println("times of i ==== "+i++);
 		Node nxt=this.children.get(key);
 		System.out.println(nxt.state);
-		System.out.println("n---"+nxt.n+",w---"+nxt.w);
+		System.out.println("n:::"+nxt.n+",w:::"+nxt.w);
 		//nxt.printItem(nxt.list);
 		nxt.printAllInformation();
 	    }
@@ -315,7 +326,8 @@ public class MctsPlayer extends BasePlayer{
 
     boolean winOwn=false;
     boolean winOpposite=false;
-    
+    int oppositeBcolor=0;
+    int oppositeRcolor=0;
         
     public Node addNode(String s , Node p){
 	if(root==null){
@@ -345,7 +357,7 @@ public class MctsPlayer extends BasePlayer{
     }
 
     public boolean winJudge(Node n){
-	int rcnt=0,bcnt=0,ucnt=0;
+	int rcnt=0,bcnt=0,pcnt=0;
 
 	for(int i=0;i<n.list.size();i++){
 	    if(n.list.get(i).getX()==8 && n.list.get(i).getY()==8){
@@ -361,8 +373,8 @@ public class MctsPlayer extends BasePlayer{
 		rcnt++;
 	    }else if("B".equals( n.list.get(i).getColor() )){
 		bcnt++;
-	    }else if("u".equals( n.list.get(i).getColor() )){
-		ucnt++;
+	    }else if("p".equals( n.list.get(i).getColor() )){
+		pcnt++;
 	    }
 	}
 	if(rcnt==0){
@@ -371,7 +383,7 @@ public class MctsPlayer extends BasePlayer{
 	}else if(bcnt==0){
 	    winOpposite=true;
 	    return true;
-	}else if(ucnt<5){
+	}else if(pcnt>(3+oppositeBcolor-oppositeRcolor)){
 	    winOpposite=true;
 	    return true;
 	}
@@ -384,23 +396,6 @@ public class MctsPlayer extends BasePlayer{
 	Node v = null;
 	Node nxt2=null;
 	System.out.println("same test");
-	for(int i=0;i<sameTest.size();i++){
-	    v=sameTest.get(i);
-	    System.out.println("parent state:"+v.state);
-	    for(String key:v.children.keySet()){
-		Node nxt=v.children.get(key);
-		System.out.println("          child state:"+nxt.state);
-		nxt2=nxt;
-	    }	    
-	}
-	System.out.println("print test of list");
-	v.printItem();
-
-	System.out.println("print test of decode");
-	System.out.println(v.decodeItem());
-
-	System.out.println("print test of getNextHand::node--2nd nxt");
-	getNextHand(nxt2.state,nxt2);
 
 	for(int i=0;i<sameTest.size();i++){
 	    System.out.println("parent child i:"+i);
@@ -429,10 +424,18 @@ public class MctsPlayer extends BasePlayer{
 	    root=addNode(curentState,null);
 
 	//node v is root of this method
-	Node v =root.nodeSearch(curentState);
+	//Node v =root.nodeSearch(curentState);
+	Node v=null;
+	//	System.out.println("nodeSearch in GNH"); 		    
+	if(parent==null)
+	    v=root.nodeSearch(curentState);
+	else
+	    v =parent.nodeSearch(curentState);
+	
 	//curentStaten have not set on node
 	//* parent is un
 	if(v == null){
+	  
 	    v=addNode(curentState,parent);	    
 	}
 
@@ -441,7 +444,7 @@ public class MctsPlayer extends BasePlayer{
 	    boolean flag=true;
 	    v=save;
 	    //System.out.println("GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START^^^^GAME START");
-	    //System.out.println(i+"kaime");
+	    //System.out.println(i+"kaime");	    
 	    while(flag){
 		//my turn
 		//System.out.println("MY TURN");
@@ -459,6 +462,7 @@ public class MctsPlayer extends BasePlayer{
 
 		if(winJudge(opposite)){
 		    //System.out.println("how many times of i:"+i);
+		    //System.out.println(opposite.state);
 		    flag=false;
 		}
 	    
@@ -482,6 +486,7 @@ public class MctsPlayer extends BasePlayer{
 		    flag=false;
 		}	      
 	    }
+
 	    while(!stack.empty()){
 		Node reward = stack.pop();
 		if(winOwn){
@@ -489,11 +494,12 @@ public class MctsPlayer extends BasePlayer{
 		    reward.w++;
 		}else if(winOpposite){
 		    reward.n++;
-		    //reward.w--;
+		    reward.w--;
 		}else{
 		    //System.out.println("NO HIT");
 		}
 	    }
+	
 	    winOwn= false;
 	    winOpposite=false;
 
@@ -503,8 +509,11 @@ public class MctsPlayer extends BasePlayer{
 	
 	
 	//	Node test=root.nodeSearch(curentState);	
-	Node maxUctNode=uct(save);
-	int testBox[]=searchDirection(save,maxUctNode);
+	//Node maxUctNode=uct(save);
+       	//int testBox[]=searchDirection(save,maxUctNode);
+	int testBox[]=evaluation(save);
+
+
 	return testBox;
     }
 
@@ -512,8 +521,8 @@ public class MctsPlayer extends BasePlayer{
 	int a[]= new int[2];
 	int dirX=0,dirY=0;
 	a[0]=8;
-	System.out.println("parent:"+parent.state);
-	System.out.println("child:"+child.state);
+	//System.out.println("parent:"+parent.state);
+	//System.out.println("child:"+child.state);
 	for(int i=0;i<8;i++){
 	    if(child.list.get(i).getX()==9 )
 		continue;
@@ -546,7 +555,7 @@ public class MctsPlayer extends BasePlayer{
 	}
 
 	if(a[0]==8){
-	    System.out.println("black coffe");
+	    //System.out.println("black coffe");
 	    int saveOwn=0,saveOpposite=0;
 	    for(int i=0;i<8;i++){
 		if(parent.list.get(i).getX() != child.list.get(i).getX() && parent.list.get(i).getY() != child.list.get(i).getY())
@@ -555,15 +564,15 @@ public class MctsPlayer extends BasePlayer{
 	    for(int i=8;i<16;i++){
 		if(parent.list.get(i).getX() != child.list.get(i).getX() || parent.list.get(i).getY() != child.list.get(i).getY())
 		    if(child.list.get(i).getX()!=9){
-			System.out.println("bakeratta");
+			//System.out.println("bakeratta");
 			saveOpposite=i;
 		    }
 	    }
 	    dirX=parent.list.get(saveOwn).getX()-child.list.get(saveOpposite).getX();
 	    dirY=parent.list.get(saveOwn).getY()-child.list.get(saveOpposite).getY();
-	    System.out.println("dirX:"+dirX+",dirY:"+dirY);
-	    System.out.println("saveOwn:"+saveOwn);
-	    System.out.println("saveOpposite:"+saveOpposite);	    
+	    // System.out.println("dirX:"+dirX+",dirY:"+dirY);
+	    //System.out.println("saveOwn:"+saveOwn);
+	    //System.out.println("saveOpposite:"+saveOpposite);	    
 	    if(dirX==-1){
 		a[0]=saveOwn;
 		a[1]=1;
@@ -587,11 +596,14 @@ public class MctsPlayer extends BasePlayer{
     public Node uct(Node n){
 	double total=0.0;
 	Node save=null;
+	Random r = new Random(Calendar.getInstance().getTimeInMillis());
 	for(String key:n.children.keySet()){
 	    Node kari=n.children.get(key);
 	    total=total+kari.n;
 	}
-	double epsiron=1E-5;
+	//double epsiron=1E-5;
+	double epsiron=0.0;
+	
 	double c=Math.sqrt(2);
 
 	for(String key:n.children.keySet()){
@@ -603,14 +615,87 @@ public class MctsPlayer extends BasePlayer{
 	    double searchValue=c*Math.sqrt(Math.log(total)/((double)v.n+epsiron));
 	    v.uctValue=winRate+searchValue;					   
 
+	    
+	    System.out.println(v.state);
+	    System.out.println("uctValue:"+v.uctValue+"------winRate:"+winRate+",searchValue:"+searchValue);
+	    System.out.println("total-n:"+total);
+	    System.out.println("n:"+v.n+",,,w:"+v.w);	    
+	    System.out.println();
+
+	    
 	    if(save==null){
 		save=v;
-	    }else if(save.uctValue<=v.uctValue){
+	    }else if(save.uctValue<v.uctValue){
 		save=v;
-	    }
+	    }else if(save.uctValue==v.uctValue){
+		if(save.n<v.n)
+		    save=v;
+	    }	
 	}
+	System.out.println("erabaretanoha:"+save.state);
+	
 
 	return save;
+	
+    }
+
+    public class winset{
+	int tw;
+	int tn;
+
+	public winset(int tw,int tn){
+	    this.tw=tw;
+	    this.tn=tn;
+	}
+    }
+
+    public int[] evaluation(Node n){
+	List<Integer> retKey=new ArrayList<Integer>();
+	double save=0.0;
+	//double epsiron=1E-5;
+	double epsiron=0.0;
+	Map<List,winset> map=new HashMap<List,winset>();
+
+	System.out.println("\nevaluation start");
+	for(String s:n.children.keySet()){
+	    Node v=n.children.get(s);	    
+	    if(v.n==0){
+		continue;
+	    }
+	    int dirnum[]=searchDirection(n,v);
+	    List<Integer> key=new ArrayList<Integer>();
+	    key.add(dirnum[0]);
+	    key.add(dirnum[1]);
+	    winset ws=map.get(key);
+	    if(ws!=null){
+		ws.tn=ws.tn+v.n;
+		ws.tw=ws.tw+v.w;		
+	    }else{
+		map.put(key,new winset(v.n,v.n));       	    
+	    }
+	}
+	for(List<Integer> key:map.keySet()){
+	    winset ws=map.get(key);
+	    double winRate=(double)ws.tw/((double)ws.tn+epsiron);
+	    System.out.println("dir-"+key.get(0)+",num-"+key.get(1));
+	    System.out.println("winRate:"+winRate);
+	    if(save==0.0){
+		save=winRate;
+		retKey=key;
+	    }else if(save<winRate){
+		save=winRate;
+		retKey=key;
+	    }/*else if(save.winRateSave==winRate){
+		if(save.n<v.n)
+		    save=winRate;
+		    }*/	
+	}
+	int returnDirnum[]=new int[2];
+	returnDirnum[0]=retKey.get(0);
+	returnDirnum[1]=retKey.get(1);	
+	System.out.println("erabaretanoha:::dir-"+returnDirnum[0]+",num-"+returnDirnum[1]);
+
+	return returnDirnum;
 	
     }
 
@@ -639,8 +724,18 @@ public class MctsPlayer extends BasePlayer{
 	    stringBoardInfo=ownItem.concat(oppositeItem);
 	    System.out.println("after:"+stringBoardInfo);
 
-	    
-	    parent=p.addNode(stringBoardInfo,parent);
+	    save=p.addNode(stringBoardInfo,parent);
+
+	    Item[] oppositeItems=p.getOppositeItems();
+	    int bcount=0,rcount=0;
+	    for(Item i:oppositeItems){
+		if(i.getColor().getSymbol().equals("B"))
+		    bcount++;
+		else if(i.getColor().getSymbol().equals("R"))
+		    rcount++;
+	    }
+	    p.oppositeBcolor=bcount;
+	    p.oppositeRcolor=rcount;
 	    
             p.printBoard();
             if (p.isEnded() == true)
@@ -663,6 +758,7 @@ public class MctsPlayer extends BasePlayer{
 		    System.out.println("position:x--"+own[i].getX()+"  y--"+own[i].getY());		   
 		}
 	    }
+	    parent=save;
 	    System.out.println(cnt++);
 	    //	    parent=save;
 	}
@@ -673,7 +769,9 @@ public class MctsPlayer extends BasePlayer{
 	} else if (p.isDraw()) {
 	    System.out.println("draw");
 	}
-	
+	p.root.printAllInformation();
+	p.printTest();
+	System.out.println("testnotest:"+0/1);
     }
 
 }
