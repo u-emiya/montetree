@@ -49,7 +49,7 @@ public class MctsPlayer extends BasePlayer{
 	  3...W
 	*/
 	public boolean isMove(int dir){
-	    if(0> dir && dir > 3){
+	    if(0> dir || dir > 3){
 		System.out.println("direction is failed");	    
 		return false;
 	    }
