@@ -260,10 +260,12 @@ public class MctsPlayer extends BasePlayer{
 		}		       
 	    }else if(8<=no && no<=15){
 		if(dir==2 && x==5 && y==5){
+		    System.out.println("Abanana");
 		    item.setX(8);
 		    item.setY(8);
 		    return true;
 		}else if(dir==3 && x==0 && y==5){
+		    System.out.println("Bbanana");
 		    item.setX(8);
 		    item.setY(8);
 		    return true;
@@ -324,10 +326,17 @@ public class MctsPlayer extends BasePlayer{
     //    public Node parent;
     public List<Node>  sameTest=new ArrayList<Node>();
 
+    public List<Integer> takeItem=new ArrayList<Integer>();
     boolean winOwn=false;
     boolean winOpposite=false;
     static int oppositeBcolor=0;
     static int oppositeRcolor=0;
+
+    static int aaa=0;
+    static int bbb=0;
+    static int ccc=0;
+    static int ddd=0;
+    static int eee=0;       
         
     public Node addNode(String s , Node p){
 	if(root==null){
@@ -358,35 +367,43 @@ public class MctsPlayer extends BasePlayer{
 
     public boolean winJudge(Node n){
 	int rcnt=0,bcnt=0,pcnt=0;
-
 	for(int i=0;i<n.list.size();i++){
 	    if(n.list.get(i).getX()==8 && n.list.get(i).getY()==8){
 		if(0<=i && i<=7){
+		    aaa++;
 		    winOwn=true;
 		    return true;
 		}else if(8<=i && i<=15){
+		    bbb++;
 		    winOpposite=true;
 		    return true;
 		}		
 		
-	    }else if("R".equals( n.list.get(i).getColor() )){
+	    }
+	}
+
+	for(int i=0;i<8;i++){
+	    if("R".equals( n.list.get(i).getColor() )){
 		rcnt++;
 	    }else if("B".equals( n.list.get(i).getColor() )){
 		bcnt++;
-	    }else if("p".equals( n.list.get(i).getColor() )){
-		pcnt++;
 	    }
 	}
+	for(int i=8;i<16;i++){
+	    if(!takeItem.contains(i) && "p".equals( n.list.get(i).getColor() )){
+		pcnt++;
+	    }	    
+	}
 	if(rcnt==0){
+	    ccc++;
 	    winOwn=true;
 	    return true;
 	}else if(bcnt==0){
+	    ddd++;
 	    winOpposite=true;
 	    return true;
-	}else if(pcnt>(3-oppositeRcolor)){
-	    System.out.println("pcnt:"+pcnt);
-	    System.out.println("uhen:"+(3+oppositeRcolor));	    
-	    
+	}else if(pcnt>(3-oppositeRcolor)){	    
+	    eee++;
 	    winOpposite=true;
 	    return true;
 	}
@@ -658,6 +675,7 @@ public class MctsPlayer extends BasePlayer{
     public int[] evaluation(Node n){
 	List<Integer> retKey=new ArrayList<Integer>();
 	double save=0.0;
+	double saveTotaln=0.0;
 	//double epsiron=1E-5;
 	double epsiron=0.0;
 	Map<List,winset> map=new HashMap<List,winset>();
@@ -685,23 +703,35 @@ public class MctsPlayer extends BasePlayer{
 	}
 	for(List<Integer> key:map.keySet()){
 	    winset ws=map.get(key);
-	    double winRate=(double)ws.tw/((double)ws.tn+epsiron);
-	    System.out.println("dir-"+key.get(0)+",num-"+key.get(1));
+	    double winRate=(double)ws.tw/((double)ws.tn+epsiron);	    	       
+	    System.out.println("\n"+"num-"+key.get(0)+",dir-"+key.get(1));	    
+	    System.out.println("win times-"+ws.tw+",visit times"+ws.tn);
 	    System.out.println("winRate:"+winRate);
 	    if(save==0.0){
 		save=winRate;
+		saveTotaln=ws.tn;
 		retKey=key;
 	    }else if(save<winRate){
 		save=winRate;
+		saveTotaln=ws.tn;
 		retKey=key;
-	    }/*else if(save.winRateSave==winRate){
-		if(save.n<v.n)
+	    }else if(save==winRate){
+		if(saveTotaln<ws.tn){
 		    save=winRate;
-		    }*/	
+		    saveTotaln=ws.tn;
+		    retKey=key;
+		}
+	    }
 	}
 	int returnDirnum[]=new int[2];
 	returnDirnum[0]=retKey.get(0);
 	returnDirnum[1]=retKey.get(1);	
+	System.out.println("times of escaped own items :"+aaa);
+	System.out.println("times of escaped opposite items :"+bbb);
+	System.out.println("times of taken blue items :"+ccc);
+	System.out.println("times of taken red items :"+ddd);
+	System.out.println("times of take p items :"+eee);
+	aaa=0;bbb=0;ccc=0;ddd=0;eee=0;
 	System.out.println("erabaretanoha:::num-"+returnDirnum[0]+",dir-"+returnDirnum[1]);
 
 	return returnDirnum;
@@ -728,8 +758,8 @@ public class MctsPlayer extends BasePlayer{
 	    System.out.println("before:"+stringBoardInfo);
 	    String ownItem=stringBoardInfo.substring(0,24);
 	    String oppositeItem=stringBoardInfo.substring(24);
-	    oppositeItem=oppositeItem.replace("r","x");
-	    oppositeItem=oppositeItem.replace("b","x");
+	    oppositeItem=oppositeItem.replace("r","p");
+	    oppositeItem=oppositeItem.replace("b","p");
 	    stringBoardInfo=ownItem.concat(oppositeItem);
 	    System.out.println("after:"+stringBoardInfo);
 
@@ -737,14 +767,21 @@ public class MctsPlayer extends BasePlayer{
 
 	    Item[] oppositeItems=p.getOppositeItems();
 	    int bcount=0,rcount=0;
-	    System.out.println("symbol test");
+	    // System.out.println("symbol test");
+	    int j=0;
 	    for(Item i:oppositeItems){
-		System.out.println(i.getColor().getSymbol());
-		if(i.getColor().getSymbol().equals("B"))
+		//System.out.println(i.getColor().getSymbol());
+		if(i.getColor().getSymbol().equals("B")){
 		    bcount++;
-		else if(i.getColor().getSymbol().equals("R"))
+		    p.takeItem.add(j+8);
+		}
+		else if(i.getColor().getSymbol().equals("R")){
 		    rcount++;
+		    p.takeItem.add(j+8);
+		}
+		j++;
 	    }
+	    p.takeItem=new ArrayList<Integer>(new HashSet<>(p.takeItem));
 	    oppositeBcolor=bcount;
 	    oppositeRcolor=rcount;
 	    
