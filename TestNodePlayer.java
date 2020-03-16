@@ -6,6 +6,8 @@ import net.wasamon.geister.utils.*;
 import net.wasamon.geister.server.*;
 import java.util.*;
 
+//git test
+
 public class TestNodePlayer extends BasePlayer{
     public class mctsItem{
 	int x;
