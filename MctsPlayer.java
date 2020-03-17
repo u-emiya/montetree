@@ -118,10 +118,10 @@ public class MctsPlayer extends BasePlayer{
 	    if(this.children == null){
 		return null;
 	    }
-	    	    if(root.state.equals(s)){
-	    //if(root.nearlyEquals(s)){
+	    if(root.state.equals(s)){
+		//if(root.nearlyEquals(s)){
 		    return this;
-		}
+	    }
 	    Node  v=null;
 	    for(String key:this.children.keySet()){
 		Node nxt=this.children.get(key);
@@ -260,12 +260,12 @@ public class MctsPlayer extends BasePlayer{
 		}		       
 	    }else if(8<=no && no<=15){
 		if(dir==2 && x==5 && y==5){
-		    System.out.println("Abanana");
+		    //System.out.println("Abanana");
 		    item.setX(8);
 		    item.setY(8);
 		    return true;
 		}else if(dir==3 && x==0 && y==5){
-		    System.out.println("Bbanana");
+		    //System.out.println("Bbanana");
 		    item.setX(8);
 		    item.setY(8);
 		    return true;
@@ -446,7 +446,7 @@ public class MctsPlayer extends BasePlayer{
 	//node v is root of this method
 	//Node v =root.nodeSearch(curentState);
 	Node v=null;
-	//	System.out.println("nodeSearch in GNH"); 		    
+	//System.out.println("nodeSearch in GNH"); 		    
 	if(parent==null)
 	    v=root.nodeSearch(curentState);
 	else
@@ -510,9 +510,13 @@ public class MctsPlayer extends BasePlayer{
 	    while(!stack.empty()){
 		Node reward = stack.pop();
 		if(winOwn){
+		    if(reward.n==2)
+			System.out.println("Happy!!");
 		    reward.n++;
 		    reward.w++;
 		}else if(winOpposite){
+		    if(reward.n==2)
+			System.out.println("Happy!!");
 		    reward.n++;
 		    reward.w--;
 		}else{
@@ -682,7 +686,8 @@ public class MctsPlayer extends BasePlayer{
 
 	System.out.println("\nevaluation start");
 	for(String s:n.children.keySet()){
-	    Node v=n.children.get(s);	    
+	    Node v=n.children.get(s);
+	    System.out.println(v.state);
 	    if(v.n==0){
 		continue;
 	    }
@@ -749,21 +754,11 @@ public class MctsPlayer extends BasePlayer{
 	String stringBoardInfo;
 	Node parent=null;
 	Node save=null;
+	boolean chgNode=false;
         GAME_LOOP: while (true) {
 	    System.out.println("GAME_LOOP start");
             stringBoardInfo=p.waitBoardInfo();
 	    stringBoardInfo=stringBoardInfo.substring(5-1);
-
-	    System.out.println("tikan");
-	    System.out.println("before:"+stringBoardInfo);
-	    String ownItem=stringBoardInfo.substring(0,24);
-	    String oppositeItem=stringBoardInfo.substring(24);
-	    oppositeItem=oppositeItem.replace("r","p");
-	    oppositeItem=oppositeItem.replace("b","p");
-	    stringBoardInfo=ownItem.concat(oppositeItem);
-	    System.out.println("after:"+stringBoardInfo);
-
-	    save=p.addNode(stringBoardInfo,parent);
 
 	    Item[] oppositeItems=p.getOppositeItems();
 	    int bcount=0,rcount=0;
@@ -782,11 +777,34 @@ public class MctsPlayer extends BasePlayer{
 		j++;
 	    }
 	    p.takeItem=new ArrayList<Integer>(new HashSet<>(p.takeItem));
-	    oppositeBcolor=bcount;
-	    oppositeRcolor=rcount;
+	    if(bcount>oppositeBcolor || rcount>oppositeRcolor){
+		oppositeBcolor=bcount;
+		oppositeRcolor=rcount;
+		chgNode=true;
+	    }
+
 	    
-	    
-            p.printBoard();
+	    System.out.println("tikan");
+	    System.out.println("before:"+stringBoardInfo);
+	    String ownItem=stringBoardInfo.substring(0,24);
+	    String oppositeItem=stringBoardInfo.substring(24);
+	    oppositeItem=oppositeItem.replace("r","p");
+	    oppositeItem=oppositeItem.replace("b","p");
+	    stringBoardInfo=ownItem.concat(oppositeItem);
+	    System.out.println("after:"+stringBoardInfo);
+
+	    /*	    if(chgNode){
+		System.out.println("root change hit");
+		p.root=null;
+		save=p.addNode(stringBoardInfo,null);
+		chgNode=false;
+	    }else{
+		save=p.addNode(stringBoardInfo,parent);	
+		}*/
+
+	save=p.addNode(stringBoardInfo,parent);	
+	
+	    p.printBoard();
             if (p.isEnded() == true)
                 break GAME_LOOP;
             Item[] own = p.getOwnItems();
