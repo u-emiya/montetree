@@ -1,7 +1,8 @@
 # montetree
 
 ### TestNodePlayer.java
-ここに説明
+### MCTSPlayer.java
+MCTSに基づいてgeisterのプレイアウトを行う。
 
 
 __メンバー__  
