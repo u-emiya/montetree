@@ -1,4 +1,5 @@
 # montetree
+This program was created using [ggp-base](https://github.com/miyo/geister_server.java/).
 
 ### TestNodePlayer.java
 MCTSPlayerのプロトタイプ、デバッグ用
